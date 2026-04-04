@@ -11,7 +11,6 @@
   
 </body>
 
-</html>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,100 +18,262 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
 <title>Pookie Launcher | Rai Daim Pro</title>
 <style>
-    :root { --primary: #ff1493; --bg: #fdf2f5; --card: rgba(255, 255, 255, 0.4); --text: #444; --border: rgba(255, 255, 255, 0.6); --admin: #9b59b6; }
-    [data-theme="dark"] { --bg: #121212; --card: rgba(0, 0, 0, 0.6); --text: #eee; --border: rgba(255, 255, 255, 0.1); }
-    body { margin:0; font-family: 'Segoe UI', sans-serif; background: var(--bg); display:flex; justify-content:center; align-items:center; height:100vh; overflow:hidden; touch-action: none; transition: 0.5s ease; }
+    :root { --primary: #ff1493; --bg: #fdf2f5; --card: rgba(255, 255, 255, 0.9); --admin: #9b59b6; }
+    body { margin:0; font-family: 'Segoe UI', sans-serif; background: var(--bg); display:flex; justify-content:center; align-items:center; height:100vh; overflow:hidden; }
     
-    @keyframes shake { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(-5px, 5px); } 50% { transform: translate(5px, -5px); } 75% { transform: translate(-5px, -5px); } }
-    .shake-active { animation: shake 0.2s ease-in-out infinite; }
-    canvas { border-radius: 24px; box-shadow: 0 15px 50px rgba(0,0,0,0.2); background: #fff; }
+    #game { position: relative; z-index: 1; border-radius: 24px; transition: all 0.3s; background: #fff; box-shadow: 0 15px 50px rgba(0,0,0,0.2); }
+    #weather-canvas { position: absolute; top:0; left:0; pointer-events: none; z-index: 5; }
+    #globalMsg { position: absolute; top: 15%; width: 100%; text-align: center; color: red; font-size: 28px; font-weight: 900; z-index: 100; display: none; text-shadow: 2px 2px white; pointer-events: none; animation: blink 0.5s infinite; }
+    @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
-    .overlay { position:absolute; width:360px; height:640px; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:24px; z-index: 10; background: var(--card); backdrop-filter: blur(20px); border: 1px solid var(--border); color: var(--text); }
+    /* ABUSE EFFECTS */
+    .earthquake { animation: shake 0.1s infinite !important; }
+    @keyframes shake { 0% { transform: translate(4px, 4px); } 50% { transform: translate(-4px, -4px); } 100% { transform: translate(4px, -4px); } }
+    .drunk-mode { filter: blur(6px) hue-rotate(120deg) !important; animation: drunk 3s infinite ease-in-out; }
+    @keyframes drunk { 0%, 100% { transform: scale(1.1) rotate(-4deg); } 50% { transform: scale(0.95) rotate(4deg); } }
+
+    .overlay { position:absolute; width:360px; height:640px; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:24px; z-index: 50; background: var(--card); backdrop-filter: blur(10px); }
+    input { margin:5px 0; padding:10px; border-radius:10px; border: 1.5px solid var(--primary); width:80%; outline: none; }
+    .btn { background: var(--primary); color: white; border:none; padding:12px 35px; font-weight:700; border-radius:50px; cursor:pointer; font-size:16px; }
     
-    .coin-stats { background: rgba(255, 215, 0, 0.2); padding: 8px 15px; border-radius: 15px; border: 1px solid gold; margin-bottom: 10px; text-align: center; }
-    .theme-switch { position: absolute; top: 20px; right: 20px; background: var(--primary); color: white; padding: 6px 12px; border-radius: 20px; font-size: 10px; border: none; cursor:pointer; }
+    /* CHAT */
+    #chat-box { position: absolute; bottom: 85px; right: 20px; width: 250px; height: 220px; background: white; border-radius: 15px; display: none; flex-direction: column; z-index: 60; border: 1px solid #ddd; box-shadow: 0 5px 20px rgba(0,0,0,0.1); overflow: hidden; }
+    #chat-msgs { flex: 1; overflow-y: auto; padding: 10px; font-size: 11px; line-height: 1.4; }
+
+    /* ADMIN PANEL */
+    #adminPanel { display:none; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:320px; background: white; padding: 20px; border-radius: 25px; z-index: 200; border: 3px solid var(--admin); box-shadow: 0 0 100px rgba(0,0,0,0.4); max-height: 80vh; overflow-y: auto; }
+    .admin-card { background: #f8f9fa; padding: 12px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #eee; text-align: center; }
+    .admin-btn { background: var(--admin); color: white; padding: 8px; width: 45%; border: none; border-radius: 6px; margin: 2px; cursor: pointer; font-size: 11px; font-weight: bold; }
     
-    input { margin:5px 0; padding:10px; border-radius:12px; border: 1px solid var(--primary); width:70%; font-size:14px; outline: none; }
-    .btn { background: var(--primary); color: white; border:none; padding:12px 35px; font-size:16px; font-weight:700; border-radius:50px; cursor:pointer; margin-top: 10px; }
+    /* LEADERBOARD UI */
+    #lb-container { width: 85%; background: white; padding: 10px; border-radius: 15px; margin-top: 15px; border: 1px solid #eee; max-height: 160px; overflow-y: auto; }
+    .lb-row { display: flex; justify-content: space-between; padding: 4px 8px; border-bottom: 1px solid #f1f1f1; font-size: 12px; }
 
-    /* Chat System */
-    #chat-container { position: absolute; bottom: 80px; right: 20px; width: 280px; height: 300px; background: var(--card); backdrop-filter: blur(15px); border-radius: 15px; display: none; flex-direction: column; z-index: 20; border: 1px solid var(--border); overflow: hidden; }
-    #chat-messages { flex: 1; overflow-y: auto; padding: 10px; font-size: 12px; }
-    .msg { margin-bottom: 8px; padding: 5px 8px; border-radius: 8px; background: rgba(255,255,255,0.4); }
-    .msg-admin { border-left: 3px solid var(--admin); background: rgba(155, 89, 182, 0.1); }
-    .msg-tag { font-size: 9px; font-weight: bold; text-transform: uppercase; margin-right: 5px; }
-    .chat-input-area { display: flex; padding: 5px; background: rgba(255,255,255,0.2); }
-    #chat-input { flex: 1; border: none; padding: 8px; border-radius: 5px; font-size: 12px; margin: 0; width: auto; }
-    #chat-toggle { position: absolute; bottom: 20px; right: 20px; z-index: 21; background: var(--primary); color: white; width: 45px; height: 45px; border-radius: 50%; border: none; cursor: pointer; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-
-    /* Admin Panel */
-    #adminPanel { display:none; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:300px; background: white; padding: 20px; border-radius: 20px; z-index: 100; color: #333; box-shadow: 0 0 100px rgba(0,0,0,0.5); }
-    .admin-btn { background: var(--admin); color: white; padding: 8px; width: 100%; border: none; border-radius: 5px; margin-top: 5px; cursor: pointer; font-weight: bold; }
-
-    .char-container { display:flex; gap:8px; margin: 10px 0; flex-wrap: wrap; justify-content: center; width: 90%; }
-    .char-box { width:45px; height:45px; border-radius:12px; background: rgba(255,255,255,0.3); cursor:pointer; display:flex; justify-content:center; align-items:center; border: 2px solid transparent; }
-    .char-box.selected { border-color: var(--primary); background: #fff; }
-    
-    #hud { position: absolute; top: 40px; width: 300px; display: none; justify-content: space-between; z-index: 5; pointer-events: none; }
-    .stat-val { color: #fff; font-size: 32px; font-weight: 900; text-shadow: 2px 2px 0 var(--primary); }
+    .shop-icon { position: absolute; bottom: 25px; left: 25px; z-index: 60; background: #FFD700; width: 50px; height: 50px; border-radius: 50%; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
 </style>
 </head>
 <body>
 
-<div id="hud">
-    <div><div style="font-size:10px; color:#fff;">SCORE</div><div id="scoreDisplay" class="stat-val">0</div></div>
-    <div style="text-align:right;"><div style="font-size:10px; color:#fff;">COINS</div><div id="coinDisplay" class="stat-val" style="color:#ffd700">0</div></div>
+<div id="globalMsg"></div>
+<canvas id="game"></canvas>
+<canvas id="weather-canvas"></canvas>
+
+<div id="hud" style="position: absolute; top: 40px; width: 320px; display: none; justify-content: space-between; z-index: 10; color: white; pointer-events: none; padding: 0 20px;">
+    <div id="scoreDisplay" style="font-size: 32px; font-weight: 900; text-shadow: 2px 2px #ff1493;">0</div>
+    <div id="coinDisplay" style="font-size: 32px; font-weight: 900; color: gold; text-shadow: 2px 2px #000;">0</div>
 </div>
 
 <div id="loginPage" class="overlay">
-    <div style="font-size:40px; font-weight:900; color:var(--primary);">POOKIE</div>
-    <input id="username" type="text" placeholder="Enter Nickname">
-    <button class="btn" onclick="login()">LOGIN</button>
+    <h1 style="color:var(--primary); font-size: 45px; margin:0;">POOKIE</h1>
+    <p style="margin-bottom: 20px; font-weight: bold; color: #888;">BY RAI DAIM</p>
+    <input id="uIn" type="text" placeholder="Enter Nickname">
+    <button class="btn" onclick="login()">PLAY NOW</button>
 </div>
 
 <div id="startMenu" class="overlay" style="display:none;">
-    <button class="theme-switch" onclick="toggleTheme()">THEME</button>
-    <div id="adminAccessBtn" onclick="openAdmin()" style="display:none; position:absolute; top:20px; left:20px; font-size:10px; color:var(--admin); cursor:pointer; font-weight:bold; background:white; padding:5px; border-radius:5px; border:1px solid var(--admin)">👑 ADMIN</div>
-    
-    <div class="coin-stats" style="margin-top: 20px;">
-        <div style="font-size: 9px; font-weight: 800; color: #b8860b;">TOTAL WALLET</div>
-        <div id="totalCoinsMenu" style="font-size: 22px; font-weight: 900; color: #d4af37;">0</div>
+    <div id="adminBtn" onclick="openAdmin()" style="display:none; position:absolute; top:20px; left:20px; color:var(--admin); cursor:pointer; font-weight:bold; font-size: 14px;">👑 ADMIN</div>
+    <h2 style="color:#f1c40f; margin: 5px;">💰 <span id="totalCoins">0</span></h2>
+    <div style="display:flex; align-items:center; gap:15px; margin: 15px;">
+        <button onclick="changeChar(-1)" style="font-size:35px; background:none; border:none; color:var(--primary); cursor:pointer;">◀</button>
+        <img id="charAvatar" src="" style="width:85px; height:85px; border-radius:50%; border:4px solid var(--primary); background: #fff;">
+        <button onclick="changeChar(1)" style="font-size:35px; background:none; border:none; color:var(--primary); cursor:pointer;">▶</button>
     </div>
-
-    <div class="char-container" id="charList"></div>
-    <button class="btn" onclick="startGame()">PLAY GAME</button>
+    <button class="btn" onclick="startGame()">START GAME</button>
     
-    <div id="scoreboard" style="width:80%; font-size:12px; margin-top:10px;">
-        <div style="text-align:center; font-weight:bold; color:var(--primary)">TOP PLAYERS</div>
+    <div id="lb-container">
         <div id="leaderboardList"></div>
     </div>
-    <div onclick="logout()" style="color:#aaa; font-size:10px; margin-top:15px; cursor:pointer; text-decoration: underline;">Logout</div>
+</div>
+
+<button class="shop-icon" onclick="alert('Shop: Collect more coins to unlock premium skins!')">🛒</button>
+<button onclick="toggleChat()" style="position:absolute; bottom:25px; right:25px; z-index:60; background:var(--primary); color:white; width:50px; height:50px; border-radius:50%; border:none; font-size:25px; cursor:pointer;">💬</button>
+
+<div id="chat-box">
+    <div id="chat-msgs"></div>
+    <div style="display:flex; border-top:1px solid #eee; padding:5px;">
+        <input id="cIn" placeholder="Type..." style="flex:1; border:none; outline:none; padding-left: 5px;">
+        <button onclick="sendMsg()" style="background:var(--primary); color:white; border:none; border-radius:8px; padding:5px 12px;">🚀</button>
+    </div>
 </div>
 
 <div id="adminPanel">
-    <h3 style="margin-top:0; color:var(--admin)">Admin Control</h3>
-    <input id="targetUser" type="text" placeholder="Target Nickname">
-    <input id="coinAmount" type="number" placeholder="Coins to Add">
-    <button class="admin-btn" onclick="adminGiveCoins()">Send Coins</button>
-    <hr>
-    <input id="announcementMsg" type="text" placeholder="Announcement Message">
-    <button class="admin-btn" onclick="adminAnnounce()">Broadcast Alert</button>
-    <hr>
-    <input id="djUrl" type="text" placeholder="Direct .mp3 URL">
-    <button class="admin-btn" onclick="adminDJ()">DJ: Play & Shake</button>
-    <button class="admin-btn" style="background:#e67e22" onclick="adminCoinRain()">Trigger Coin Rain</button>
-    <button class="admin-btn" style="background:#333; margin-top:15px" onclick="closeAdmin()">Close</button>
+    <h3 style="text-align:center; color:var(--admin); margin-top:0;">MASTER CONTROL</h3>
+    
+    <div class="admin-card">
+        <b>Weather</b><br>
+        <button class="admin-btn" style="background:#3498db" onclick="setWeather('rain')">Rain</button>
+        <button class="admin-btn" style="background:#bdc3c7; color:black" onclick="setWeather('snow')">Snow</button>
+        <button class="admin-btn" style="background:#f1c40f; color:black" onclick="setWeather('coins')">Coinfall</button>
+        <button class="admin-btn" style="background:#e74c3c" onclick="setWeather('none')">Clear</button>
+    </div>
+
+    <div class="admin-card">
+        <b>Abuse / Pranks</b><br>
+        <button class="admin-btn" style="background:#e67e22" onclick="setAbuse('drunk')">Drunk</button>
+        <button class="admin-btn" style="background:#d35400" onclick="setAbuse('shake')">Earthquake</button>
+        <button class="admin-btn" style="background:black" onclick="setAbuse('ban')">Fake Ban</button>
+        <button class="admin-btn" style="background:#7f8c8d" onclick="setAbuse('clear')">Reset</button>
+    </div>
+
+    <div class="admin-card">
+        <b>Global Announcement</b><br>
+        <input id="gMsgIn" type="text" placeholder="Your message...">
+        <button class="admin-btn" style="width:95%; background:#c0392b" onclick="sendGlobalMsg()">Push Alert</button>
+    </div>
+
+    <div class="admin-card">
+        <b>Set Player Coins</b><br>
+        <input id="targetN" type="text" placeholder="Username" style="width:40%">
+        <input id="targetC" type="number" placeholder="Coins" style="width:40%">
+        <button class="admin-btn" style="width:95%; background:#27ae60" onclick="setBalance()">Update</button>
+    </div>
+
+    <div class="admin-card">
+        <b>Global DJ</b><br>
+        <input id="musUrl" type="text" placeholder="MP3 Link">
+        <button class="admin-btn" style="width:95%; background:#8e44ad" onclick="playMus()">Play Sound</button>
+    </div>
+
+    <button class="admin-btn" style="width:100%; background:#333; margin-top:10px;" onclick="closeAdmin()">CLOSE</button>
 </div>
 
-<button id="chat-toggle" onclick="toggleChat()">💬</button>
-<div id="chat-container">
-    <div style="background:var(--primary); color:white; padding:10px; font-size:12px; font-weight:bold; display:flex; justify-content:space-between">
-        <span>GLOBAL CHAT</span>
-        <span onclick="toggleChat()" style="cursor:pointer">✖</span>
-    </div>
-    <div id="chat-messages"></div>
-    <div class="chat-input-area">
-        <input type="text" id="chat-input" placeholder="Say something...">
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getDatabase, ref, set, onValue, push, serverTimestamp, get, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+const conf = { apiKey: "AIzaSyA0oEauWFRHg-VoDFUHgka2Q7AbLOt6BPc", databaseURL: "https://karbala-2fcca-default-rtdb.firebaseio.com" };
+const app = initializeApp(conf); const db = getDatabase(app);
+const canvas = document.getElementById('game'); const ctx = canvas.getContext('2d');
+const wCanvas = document.getElementById('weather-canvas'); const wCtx = wCanvas.getContext('2d');
+canvas.width = 360; canvas.height = 640; wCanvas.width = 360; wCanvas.height = 640;
+
+const dieSnd = new Audio('https://files.catbox.moe/tkzhsm.wav');
+const jumpSnd = new Audio('https://assets.mixkit.co/active_storage/sfx/1359/1359-preview.mp3');
+
+let particles = []; let weatherMode = 'none';
+const assets = { chars: ["https://i.ibb.co/4nZsqPZn/IMG-20260403-WA0258-removebg-preview.png","https://i.ibb.co/KcbN4WFM/IMG-20260403-WA0256-removebg-preview.png","https://i.ibb.co/zV9QR1R1/IMG-20260403-WA0257-removebg-preview.png","https://i.ibb.co/3yQFCm0W/IMG-20260403-WA0259-removebg-preview.png","https://i.ibb.co/XZT4pj5r/1775227244228-removebg-preview.png"], bg: "https://i.ibb.co/PsXKrn2S/1775227599134.png", coin: "https://i.ibb.co/23YNrJty/1775130347248-removebg-preview.png" };
+let birdImg = new Image(); let bgImg = new Image(); bgImg.src = assets.bg; let coinImg = new Image(); coinImg.src = assets.coin;
+let st = { active: false, dead: false, score: 0, coins: 0, frame: 0, bX: 0, bird: { x: 80, y: 300, v: 0, g: 0.25 }, pipes: [], charIndex: 0 };
+const MY_NAME = "Rai Daim";
+
+// WEATHER & PARTICLES
+function updateWeather() {
+    wCtx.clearRect(0,0,360,640);
+    if(weatherMode !== 'none' && Math.random() < 0.2) particles.push({ x: Math.random()*360, y: -20, speed: weatherMode==='rain'?10:2, type: weatherMode });
+    particles.forEach((p, i) => {
+        p.y += p.speed;
+        if(p.type === 'rain') { wCtx.strokeStyle='#3498db'; wCtx.beginPath(); wCtx.moveTo(p.x, p.y); wCtx.lineTo(p.x, p.y+10); wCtx.stroke(); }
+        else if(p.type === 'snow') { wCtx.fillStyle='white'; wCtx.beginPath(); wCtx.arc(p.x, p.y, 3, 0, 7); wCtx.fill(); }
+        else if(p.type === 'coins') { wCtx.drawImage(coinImg, p.x, p.y, 22, 22); }
+        if(p.y > 640) particles.splice(i, 1);
+    });
+    requestAnimationFrame(updateWeather);
+}
+updateWeather();
+
+// FIREBASE LISTENERS
+onValue(ref(db, 'events/weather'), s => weatherMode = s.val() || 'none');
+onValue(ref(db, 'events/msg'), s => {
+    if(s.val()){ 
+        const m = document.getElementById('globalMsg'); m.innerText = s.val(); 
+        m.style.display = 'block'; setTimeout(() => m.style.display='none', 5000);
+    }
+});
+onValue(ref(db, 'events/abuse'), s => {
+    const d = s.val(); if(!d) return;
+    canvas.classList.remove('drunk-mode', 'earthquake');
+    if(d.type === 'drunk') canvas.classList.add('drunk-mode');
+    else if(d.type === 'shake') canvas.classList.add('earthquake');
+    else if(d.type === 'ban' && localStorage.getItem('pUser') !== MY_NAME) { alert("⚠️ ACCOUNT BANNED BY ADMIN!"); location.reload(); }
+    else if(d.type === 'clear') { canvas.classList.remove('drunk-mode', 'earthquake'); }
+});
+onValue(ref(db, 'events/music'), s => { if(s.val()) new Audio(s.val()).play().catch(e=>{}); });
+
+// ADMIN ACTIONS
+window.setWeather = (m) => set(ref(db, 'events/weather'), m);
+window.setAbuse = (t) => set(ref(db, 'events/abuse'), { type: t, t: Date.now() });
+window.sendGlobalMsg = () => set(ref(db, 'events/msg'), document.getElementById('gMsgIn').value);
+window.playMus = () => set(ref(db, 'events/music'), document.getElementById('musUrl').value);
+window.setBalance = () => {
+    const n = document.getElementById('targetN').value.replace(/\W/g, '');
+    const a = parseInt(document.getElementById('targetC').value);
+    set(ref(db, 'users/'+n+'/coins'), a).then(()=>alert("Coins Updated!"));
+};
+
+// GAME LOGIC
+window.login = () => { const n = document.getElementById('uIn').value.trim(); if(n.length>1){ localStorage.setItem('pUser', n); showMenu(); } };
+window.showMenu = () => {
+    const u = localStorage.getItem('pUser'); if(!u) return;
+    document.getElementById('loginPage').style.display='none'; document.getElementById('startMenu').style.display='flex';
+    if(u === MY_NAME) document.getElementById('adminBtn').style.display='block';
+    onValue(ref(db, 'users/'+u.replace(/\W/g, '')+'/coins'), s => document.getElementById('totalCoins').innerText = s.val()||0);
+    syncLB(); updateCharUI();
+};
+window.startGame = () => {
+    document.getElementById('startMenu').style.display='none'; document.getElementById('hud').style.display='flex';
+    birdImg.src = assets.chars[st.charIndex];
+    st = { ...st, active: true, dead: false, score: 0, frame: 0, pipes: [] };
+    loop();
+};
+
+function loop() {
+    if(!st.active) return; ctx.clearRect(0,0,360,640);
+    st.bX -= 2; ctx.drawImage(bgImg, st.bX, 0, 360, 640); ctx.drawImage(bgImg, st.bX+360, 0, 360, 640); if(st.bX<=-360) st.bX=0;
+    if(!st.dead) {
+        st.bird.v += st.bird.g; st.bird.y += st.bird.v;
+        if(st.frame%90===0) st.pipes.push({x:360, y:Math.random()*250+100, passed:false});
+    }
+    st.pipes.forEach((p, i) => { 
+        p.x -= 3; ctx.fillStyle="#2ecc71"; ctx.fillRect(p.x,0,55,p.y); ctx.fillRect(p.x,p.y+180,55,640); 
+        if(!st.dead && st.bird.x+15>p.x && st.bird.x-15<p.x+55 && (st.bird.y-15<p.y || st.bird.y+15>p.y+180)) die();
+        if(!p.passed && p.x < st.bird.x) { p.passed=true; st.score++; document.getElementById('scoreDisplay').innerText = st.score; }
+        if(p.x < -60) st.pipes.splice(i, 1);
+    });
+    ctx.drawImage(birdImg, st.bird.x-25, st.bird.y-25, 50, 50);
+    if(!st.dead && (st.bird.y>640 || st.bird.y<0)) die();
+    st.frame++; requestAnimationFrame(loop);
+}
+
+function die() { 
+    if(st.dead) return; st.dead = true; dieSnd.play();
+    const u = localStorage.getItem('pUser').replace(/\W/g, ''); 
+    get(ref(db, 'users/'+u+'/coins')).then(s => set(ref(db, 'users/'+u+'/coins'), (s.val()||0)+st.score)); 
+    setTimeout(() => { st.active=false; showMenu(); document.getElementById('hud').style.display='none'; }, 1500); 
+}
+
+// LEADERBOARD SYNC
+function syncLB() {
+    const lbRef = query(ref(db, 'users'), orderByChild('coins'), limitToLast(10));
+    onValue(lbRef, (s) => {
+        let l = document.getElementById('leaderboardList');
+        l.innerHTML = '<div style="text-align:center; font-weight:bold; color:var(--primary); font-size:12px; margin-bottom:5px;">🏆 LEADERBOARD</div>';
+        let players = []; s.forEach(x => { players.push(x.val()); });
+        players.reverse().forEach((p, i) => {
+            l.innerHTML += `<div class="lb-row"><span>${i+1}. ${p.name}</span><b>💰 ${p.coins||0}</b></div>`;
+        });
+    });
+}
+
+// CHAT & MODALS
+window.toggleChat = () => { const c = document.getElementById('chat-box'); c.style.display = (c.style.display==='flex'?'none':'flex'); };
+window.sendMsg = () => { const i = document.getElementById('cIn'); if(i.value) push(ref(db,'chat'),{u:localStorage.getItem('pUser'),m:i.value}); i.value=''; };
+onValue(query(ref(db,'chat'), limitToLast(12)), s => {
+    const l = document.getElementById('chat-msgs'); l.innerHTML = '';
+    s.forEach(x => { const d=x.val(); l.innerHTML += `<div><b style="color:var(--primary)">${d.u}:</b> ${d.m}</div>`; });
+    l.scrollTop = l.scrollHeight;
+});
+
+window.openAdmin = () => document.getElementById('adminPanel').style.display='block';
+window.closeAdmin = () => document.getElementById('adminPanel').style.display='none';
+window.addEventListener('mousedown', (e) => { if(st.active && !st.dead && !e.target.closest('#adminPanel')) { st.bird.v = -6; jumpSnd.currentTime=0; jumpSnd.play(); } });
+window.changeChar = (dir) => { st.charIndex = (st.charIndex + dir + assets.chars.length) % assets.chars.length; updateCharUI(); };
+function updateCharUI() { document.getElementById('charAvatar').src = assets.chars[st.charIndex]; }
+
+if(localStorage.getItem('pUser')) showMenu();
+</script>
+</body>
+</html>
+
         <button onclick="sendChatMessage()" style="border:none; background:none; cursor:pointer; font-size:16px">🚀</button>
     </div>
 </div>
