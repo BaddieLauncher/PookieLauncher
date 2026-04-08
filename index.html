@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="google-site-verification" content="google73e6ba20d7b7523e.html">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
 <title>Pookie Launcher | Rai Daim Pro</title>
 <style>
@@ -33,6 +34,8 @@
     .lb-row { display: flex; justify-content: space-between; padding: 4px 8px; border-bottom: 1px solid #f1f1f1; font-size: 12px; }
 
     .shop-icon { position: absolute; bottom: 25px; left: 25px; z-index: 60; background: #FFD700; width: 50px; height: 50px; border-radius: 50%; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+    
+    .logout-btn { position: absolute; top: 20px; right: 20px; color: #777; cursor: pointer; font-weight: bold; font-size: 12px; text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -54,7 +57,9 @@
 </div>
 
 <div id="startMenu" class="overlay" style="display:none;">
-    <div id="adminBtn" onclick="openAdmin()" style="display:none; position:absolute; top:20px; left:20px; color:var(--admin); cursor:pointer; font-weight:bold; font-size: 14px;">👑 ADMIN</div>
+    <div id="adminBtn" onclick="openAdmin()" style="display:none; position:absolute; top:20px; left:20px; color:var(--admin); cursor:pointer; font-weight:bold; font-size: 14px; background: rgba(155, 89, 182, 0.1); padding: 5px 10px; border-radius: 10px;">👑 ADMIN</div>
+    <div class="logout-btn" onclick="logout()">LOGOUT</div>
+    
     <h2 style="color:#f1c40f; margin: 5px;">💰 <span id="totalCoins">0</span></h2>
     <div style="display:flex; align-items:center; gap:15px; margin: 15px;">
         <button onclick="changeChar(-1)" style="font-size:35px; background:none; border:none; color:var(--primary); cursor:pointer;">◀</button>
@@ -124,9 +129,10 @@ const canvas = document.getElementById('game'); const ctx = canvas.getContext('2
 const wCanvas = document.getElementById('weather-canvas'); const wCtx = wCanvas.getContext('2d');
 canvas.width = 360; canvas.height = 640; wCanvas.width = 360; wCanvas.height = 640;
 
-// TUN TUN SAHUR LOOP
 const bgMusic = new Audio('https://files.catbox.moe/vpt03v.mp3'); 
 bgMusic.loop = true;
+bgMusic.preload = 'auto';
+
 const dieSnd = new Audio('https://files.catbox.moe/tkzhsm.wav');
 const jumpSnd = new Audio('https://assets.mixkit.co/active_storage/sfx/1359/1359-preview.mp3');
 
@@ -138,14 +144,14 @@ const assets = {
 };
 let birdImg = new Image(); let bgImg = new Image(); bgImg.src = assets.bg; let coinImg = new Image(); coinImg.src = assets.coin;
 let st = { active: false, dead: false, score: 0, coins: 0, frame: 0, bX: 0, bird: { x: 80, y: 300, v: 0, g: 0.25 }, pipes: [], gameCoins: [], charIndex: 0 };
+
 const MY_NAME = "Rai Daim";
 
 function updateWeather() {
     wCtx.clearRect(0,0,360,640);
     if(weatherMode !== 'none' && Math.random() < 0.2) particles.push({ x: Math.random()*360, y: -20, speed: weatherMode==='rain'?8:2, type: weatherMode });
     for(let i = particles.length - 1; i >= 0; i--) {
-        let p = particles[i];
-        p.y += p.speed;
+        let p = particles[i]; p.y += p.speed;
         if(p.type === 'rain') { wCtx.strokeStyle='#3498db'; wCtx.beginPath(); wCtx.moveTo(p.x, p.y); wCtx.lineTo(p.x, p.y+10); wCtx.stroke(); }
         else if(p.type === 'snow') { wCtx.fillStyle='white'; wCtx.beginPath(); wCtx.arc(p.x, p.y, 3, 0, 7); wCtx.fill(); }
         else if(p.type === 'coins') { wCtx.drawImage(coinImg, p.x, p.y, 22, 22); }
@@ -186,14 +192,27 @@ window.login = () => {
     const n = document.getElementById('uIn').value.trim(); 
     if(n.length>1){ 
         localStorage.setItem('pUser', n); 
-        bgMusic.play().catch(e => console.log("Click to play music")); 
+        if (bgMusic.paused) bgMusic.play().catch(e => {}); 
         showMenu(); 
     } 
 };
+
+window.logout = () => {
+    localStorage.removeItem('pUser');
+    location.reload();
+};
+
 window.showMenu = () => {
     const u = localStorage.getItem('pUser'); if(!u) return;
-    document.getElementById('loginPage').style.display='none'; document.getElementById('startMenu').style.display='flex';
-    if(u === MY_NAME) document.getElementById('adminBtn').style.display='block';
+    document.getElementById('loginPage').style.display='none'; 
+    document.getElementById('startMenu').style.display='flex';
+    
+    if(u === MY_NAME) {
+        document.getElementById('adminBtn').style.display = 'block';
+    } else {
+        document.getElementById('adminBtn').style.display = 'none';
+    }
+
     onValue(ref(db, 'users/'+u.replace(/\W/g, '')+'/coins'), s => {
         const val = s.val()||0;
         document.getElementById('totalCoins').innerText = val;
@@ -225,14 +244,16 @@ function loop() {
     }
 
     st.pipes.forEach((p, i) => { 
-        p.x -= 2.5; ctx.fillStyle="#2ecc71"; ctx.fillRect(p.x,0,55,p.y); ctx.fillRect(p.x,p.y+180,55,640); 
+        if(!st.dead) p.x -= 2.5; 
+        ctx.fillStyle="#2ecc71"; ctx.fillRect(p.x,0,55,p.y); ctx.fillRect(p.x,p.y+180,55,640); 
         if(!st.dead && st.bird.x+15>p.x && st.bird.x-15<p.x+55 && (st.bird.y-15<p.y || st.bird.y+15>p.y+180)) die();
         if(!p.passed && p.x < st.bird.x) { p.passed=true; st.score++; document.getElementById('scoreDisplay').innerText = st.score; }
         if(p.x < -60) st.pipes.splice(i, 1);
     });
 
     st.gameCoins.forEach((c, i) => {
-        c.x -= 2.5; if(!c.collected) {
+        if(!st.dead) c.x -= 2.5; 
+        if(!c.collected) {
             ctx.drawImage(coinImg, c.x, c.y, 30, 30);
             if(!st.dead && Math.hypot(st.bird.x - (c.x+15), st.bird.y - (c.y+15)) < 30) {
                 c.collected = true; 
@@ -244,7 +265,7 @@ function loop() {
 
     ctx.drawImage(birdImg, st.bird.x-25, st.bird.y-25, 50, 50);
     if(!st.dead && (st.bird.y>640 || st.bird.y<0)) die();
-    st.frame++; 
+    if(!st.dead) st.frame++; 
     requestAnimationFrame(loop);
 }
 
@@ -254,8 +275,13 @@ function addCoin() {
 }
 
 function die() { 
-    if(st.dead) return; st.dead = true; dieSnd.play();
-    setTimeout(() => { st.active=false; showMenu(); document.getElementById('hud').style.display='none'; }, 1500); 
+    if(st.dead) return; st.dead = true; 
+    st.bird.v = 0; st.bird.g = 0;
+    dieSnd.play();
+    setTimeout(() => { 
+        st.active=false; showMenu(); 
+        document.getElementById('hud').style.display='none'; 
+    }, 1500); 
 }
 
 function syncLB() {
@@ -286,6 +312,7 @@ window.addEventListener('touchstart', (e) => {
 });
 window.addEventListener('mousedown', (e) => { 
     if(st.active && !st.dead && !e.target.closest('#adminPanel')) { st.bird.v = -5.5; jumpSnd.currentTime=0; jumpSnd.play(); } 
+    if(bgMusic.paused) bgMusic.play();
 });
 window.changeChar = (dir) => { st.charIndex = (st.charIndex + dir + assets.chars.length) % assets.chars.length; updateCharUI(); };
 function updateCharUI() { document.getElementById('charAvatar').src = assets.chars[st.charIndex]; }
