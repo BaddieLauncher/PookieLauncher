@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="google-site-verification" content="google73e6ba20d7b7523e.html">
+<meta name="google-site-verification" content="nqvZ7KYOfqnEqYC0CxZFqwjWtYnGVjKq__ml5qs-ZuQ" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
 <title>Pookie Launcher | Rai Daim Pro</title>
 <style>
@@ -73,7 +73,7 @@
     </div>
 </div>
 
-<button class="shop-icon" onclick="alert('Shop: Collect more coins to unlock premium skins!')">🛒</button>
+<button class="shop-icon" onclick="alert('Shop Coming Soon!')">🛒</button>
 <button onclick="toggleChat()" style="position:absolute; bottom:25px; right:25px; z-index:60; background:var(--primary); color:white; width:50px; height:50px; border-radius:50%; border:none; font-size:25px; cursor:pointer;">💬</button>
 
 <div id="chat-box">
@@ -131,7 +131,6 @@ canvas.width = 360; canvas.height = 640; wCanvas.width = 360; wCanvas.height = 6
 
 const bgMusic = new Audio('https://files.catbox.moe/vpt03v.mp3'); 
 bgMusic.loop = true;
-bgMusic.preload = 'auto';
 
 const dieSnd = new Audio('https://files.catbox.moe/tkzhsm.wav');
 const jumpSnd = new Audio('https://assets.mixkit.co/active_storage/sfx/1359/1359-preview.mp3');
@@ -145,6 +144,7 @@ const assets = {
 let birdImg = new Image(); let bgImg = new Image(); bgImg.src = assets.bg; let coinImg = new Image(); coinImg.src = assets.coin;
 let st = { active: false, dead: false, score: 0, coins: 0, frame: 0, bX: 0, bird: { x: 80, y: 300, v: 0, g: 0.25 }, pipes: [], gameCoins: [], charIndex: 0 };
 
+// ACCESS NAME
 const MY_NAME = "Rai Daim";
 
 function updateWeather() {
@@ -207,6 +207,7 @@ window.showMenu = () => {
     document.getElementById('loginPage').style.display='none'; 
     document.getElementById('startMenu').style.display='flex';
     
+    // ADMIN CHECK
     if(u === MY_NAME) {
         document.getElementById('adminBtn').style.display = 'block';
     } else {
@@ -256,8 +257,7 @@ function loop() {
         if(!c.collected) {
             ctx.drawImage(coinImg, c.x, c.y, 30, 30);
             if(!st.dead && Math.hypot(st.bird.x - (c.x+15), st.bird.y - (c.y+15)) < 30) {
-                c.collected = true; 
-                addCoin();
+                c.collected = true; addCoin();
             }
         }
         if(c.x < -60) st.gameCoins.splice(i, 1);
