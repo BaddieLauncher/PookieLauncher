@@ -2,320 +2,331 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="google-site-verification" content="nqvZ7KYOfqnEqYC0CxZFqwjWtYnGVjKq__ml5qs-ZuQ" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
 <title>Pookie Launcher | Rai Daim Pro</title>
 <style>
-    :root { --primary: #ff1493; --bg: #fdf2f5; --card: rgba(255, 255, 255, 0.9); --admin: #9b59b6; }
-    body { margin:0; font-family: 'Segoe UI', sans-serif; background: var(--bg); display:flex; justify-content:center; align-items:center; height:100vh; overflow:hidden; }
+    :root { --primary: #ff1493; --bg: #0f0c29; --card: rgba(255, 255, 255, 0.95); --admin: #9b59b6; }
+    body { margin:0; font-family: 'Segoe UI', sans-serif; background: #000; display:flex; justify-content:center; align-items:center; height:100vh; overflow:hidden; }
     
-    #game { position: relative; z-index: 1; border-radius: 24px; transition: all 0.3s; background: #fff; box-shadow: 0 15px 50px rgba(0,0,0,0.2); width: 360px; height: 640px; }
-    #weather-canvas { position: absolute; top:0; left:0; pointer-events: none; z-index: 5; }
-    #globalMsg { position: absolute; top: 15%; width: 100%; text-align: center; color: red; font-size: 28px; font-weight: 900; z-index: 100; display: none; text-shadow: 2px 2px white; pointer-events: none; animation: blink 0.5s infinite; }
-    @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+    #game-container { position: relative; width: 360px; height: 640px; background: #fff; border-radius: 24px; overflow: hidden; box-shadow: 0 0 50px rgba(255, 20, 147, 0.4); }
+    canvas { position: absolute; top:0; left:0; width: 100%; height: 100%; }
+    #weather-canvas { pointer-events: none; z-index: 5; }
 
-    .earthquake { animation: shake 0.1s infinite !important; }
-    @keyframes shake { 0% { transform: translate(4px, 4px); } 50% { transform: translate(-4px, -4px); } 100% { transform: translate(4px, -4px); } }
-    .drunk-mode { filter: blur(6px) hue-rotate(120deg) !important; animation: drunk 3s infinite ease-in-out; }
-    @keyframes drunk { 0%, 100% { transform: scale(1.1) rotate(-4deg); } 50% { transform: scale(0.95) rotate(4deg); } }
-
-    .overlay { position:absolute; width:360px; height:640px; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:24px; z-index: 50; background: var(--card); backdrop-filter: blur(10px); }
-    input { margin:5px 0; padding:10px; border-radius:10px; border: 1.5px solid var(--primary); width:80%; outline: none; }
-    .btn { background: var(--primary); color: white; border:none; padding:12px 35px; font-weight:700; border-radius:50px; cursor:pointer; font-size:16px; }
+    .overlay { position:absolute; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index: 50; background: var(--card); backdrop-filter: blur(10px); text-align: center; }
+    input { margin:8px 0; padding:12px; border-radius:12px; border: 2px solid var(--primary); width:75%; outline: none; text-align: center; font-weight: bold; }
+    .btn { background: var(--primary); color: white; border:none; padding:12px 30px; font-weight:700; border-radius:50px; cursor:pointer; font-size:14px; margin-top: 8px; width: 80%; transition: 0.2s; text-transform: uppercase; }
+    .btn:active { transform: scale(0.95); }
     
-    #chat-box { position: absolute; bottom: 85px; right: 20px; width: 250px; height: 220px; background: white; border-radius: 15px; display: none; flex-direction: column; z-index: 60; border: 1px solid #ddd; box-shadow: 0 5px 20px rgba(0,0,0,0.1); overflow: hidden; }
-    #chat-msgs { flex: 1; overflow-y: auto; padding: 10px; font-size: 11px; line-height: 1.4; }
-
-    #adminPanel { display:none; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:320px; background: white; padding: 20px; border-radius: 25px; z-index: 200; border: 3px solid var(--admin); box-shadow: 0 0 100px rgba(0,0,0,0.4); max-height: 80vh; overflow-y: auto; }
-    .admin-card { background: #f8f9fa; padding: 12px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #eee; text-align: center; }
-    .admin-btn { background: var(--admin); color: white; padding: 8px; width: 45%; border: none; border-radius: 6px; margin: 2px; cursor: pointer; font-size: 11px; font-weight: bold; }
+    #hud { position: absolute; top: 30px; width: 100%; display: none; justify-content: space-between; z-index: 10; padding: 0 20px; box-sizing: border-box; pointer-events: none; }
     
-    #lb-container { width: 85%; background: white; padding: 10px; border-radius: 15px; margin-top: 15px; border: 1px solid #eee; max-height: 160px; overflow-y: auto; }
-    .lb-row { display: flex; justify-content: space-between; padding: 4px 8px; border-bottom: 1px solid #f1f1f1; font-size: 12px; }
+    /* Leaderboard Style */
+    #lb-box { width: 85%; background: #f8f9fa; padding: 10px; border-radius: 15px; margin-top: 15px; border: 1px solid #ddd; max-height: 120px; overflow-y: auto; }
+    .lb-row { display: flex; justify-content: space-between; font-size: 11px; padding: 3px 0; border-bottom: 1px solid #eee; }
 
-    .shop-icon { position: absolute; bottom: 25px; left: 25px; z-index: 60; background: #FFD700; width: 50px; height: 50px; border-radius: 50%; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+    /* Admin Panel */
+    #adminPanel { display:none; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:300px; background: white; padding: 20px; border-radius: 25px; z-index: 200; border: 3px solid var(--admin); box-shadow: 0 0 100px rgba(0,0,0,0.5); }
     
-    .logout-btn { position: absolute; top: 20px; right: 20px; color: #777; cursor: pointer; font-weight: bold; font-size: 12px; text-decoration: underline; }
+    #chat-box { position: absolute; bottom: 85px; right: 15px; width: 220px; height: 200px; background: white; border-radius: 15px; display: none; flex-direction: column; z-index: 60; border: 1px solid #ddd; }
+    #chat-msgs { flex: 1; overflow-y: auto; padding: 10px; font-size: 11px; }
+
+    .lobby-badge { background: var(--primary); color: white; padding: 15px; border-radius: 15px; font-size: 24px; font-weight: 900; margin: 15px 0; letter-spacing: 5px; }
 </style>
 </head>
 <body>
 
-<div id="globalMsg"></div>
-<canvas id="game"></canvas>
-<canvas id="weather-canvas"></canvas>
-
-<div id="hud" style="position: absolute; top: 40px; width: 320px; display: none; justify-content: space-between; z-index: 10; color: white; pointer-events: none; padding: 0 20px;">
-    <div id="scoreDisplay" style="font-size: 32px; font-weight: 900; text-shadow: 2px 2px #ff1493;">0</div>
-    <div id="coinDisplay" style="font-size: 32px; font-weight: 900; color: gold; text-shadow: 2px 2px #000;">0</div>
-</div>
-
-<div id="loginPage" class="overlay">
-    <h1 style="color:var(--primary); font-size: 45px; margin:0;">POOKIE</h1>
-    <p style="margin-bottom: 20px; font-weight: bold; color: #888;">BY RAI DAIM</p>
-    <input id="uIn" type="text" placeholder="Enter Nickname">
-    <button class="btn" onclick="login()">PLAY NOW</button>
-</div>
-
-<div id="startMenu" class="overlay" style="display:none;">
-    <div id="adminBtn" onclick="openAdmin()" style="display:none; position:absolute; top:20px; left:20px; color:var(--admin); cursor:pointer; font-weight:bold; font-size: 14px; background: rgba(155, 89, 182, 0.1); padding: 5px 10px; border-radius: 10px;">👑 ADMIN</div>
-    <div class="logout-btn" onclick="logout()">LOGOUT</div>
-    
-    <h2 style="color:#f1c40f; margin: 5px;">💰 <span id="totalCoins">0</span></h2>
-    <div style="display:flex; align-items:center; gap:15px; margin: 15px;">
-        <button onclick="changeChar(-1)" style="font-size:35px; background:none; border:none; color:var(--primary); cursor:pointer;">◀</button>
-        <img id="charAvatar" src="" style="width:85px; height:85px; border-radius:50%; border:4px solid var(--primary); background: #fff;">
-        <button onclick="changeChar(1)" style="font-size:35px; background:none; border:none; color:var(--primary); cursor:pointer;">▶</button>
+<div id="game-container">
+    <div id="hud">
+        <div id="scoreDisplay" style="font-size: 30px; font-weight: 900; color: white; text-shadow: 2px 2px #ff1493;">0</div>
+        <div id="coinDisplay" style="font-size: 30px; font-weight: 900; color: gold; text-shadow: 2px 2px #000;">0</div>
     </div>
-    <button class="btn" onclick="startGame()">START GAME</button>
-    
-    <div id="lb-container">
-        <div id="leaderboardList"></div>
-    </div>
-</div>
 
-<button class="shop-icon" onclick="alert('Shop Coming Soon!')">🛒</button>
-<button onclick="toggleChat()" style="position:absolute; bottom:25px; right:25px; z-index:60; background:var(--primary); color:white; width:50px; height:50px; border-radius:50%; border:none; font-size:25px; cursor:pointer;">💬</button>
+    <canvas id="game"></canvas>
+    <canvas id="weather-canvas"></canvas>
 
-<div id="chat-box">
-    <div id="chat-msgs"></div>
-    <div style="display:flex; border-top:1px solid #eee; padding:5px;">
-        <input id="cIn" placeholder="Type..." style="flex:1; border:none; outline:none; padding-left: 5px;">
-        <button onclick="sendMsg()" style="background:var(--primary); color:white; border:none; border-radius:8px; padding:5px 12px;">🚀</button>
+    <div id="loginPage" class="overlay">
+        <h1 style="color:var(--primary); margin:0;">POOKIE</h1>
+        <input id="uIn" type="text" placeholder="Enter Nickname">
+        <button class="btn" onclick="login()">Enter Arena</button>
     </div>
+
+    <div id="startMenu" class="overlay" style="display:none;">
+        <div id="adminBtn" onclick="openAdmin()" style="display:none; position:absolute; top:20px; left:20px; color:var(--admin); cursor:pointer; font-weight:bold; font-size:20px;">👑</div>
+        <h2 style="color:#f1c40f; margin:5px;">💰 <span id="totalCoins">0</span></h2>
+        
+        <div style="display:flex; align-items:center; gap:15px; margin: 10px;">
+            <button onclick="changeChar(-1)" style="font-size:30px; background:none; border:none; color:var(--primary);">◀</button>
+            <img id="charAvatar" src="" style="width:80px; height:80px; border-radius:50%; border:3px solid var(--primary); background:#fff;">
+            <button onclick="changeChar(1)" style="font-size:30px; background:none; border:none; color:var(--primary);">▶</button>
+        </div>
+
+        <button class="btn" onclick="startGame()">Solo Play</button>
+        <button class="btn" onclick="openMultiMenu()" style="background:#3498db">Multiplayer</button>
+        
+        <div id="lb-box"><div id="leaderboardList"></div></div>
+        <div onclick="logout()" style="margin-top:10px; color:#999; font-size:11px; cursor:pointer;">LOGOUT</div>
+    </div>
+
+    <div id="multiMenu" class="overlay" style="display:none;">
+        <h2 style="color:var(--primary)">MULTIPLAYER</h2>
+        <input id="roomIn" type="text" placeholder="Enter Room Code">
+        <button class="btn" onclick="joinRoomAction()" style="background:#2ecc71">Join Room</button>
+        <button class="btn" onclick="createRoomAction()" style="background:#f39c12">Create Room</button>
+        <button class="btn" onclick="showMenu()" style="background:#999">Back</button>
+    </div>
+
+    <div id="roomLobby" class="overlay" style="display:none;">
+        <h3 style="margin:0">ROOM LOBBY</h3>
+        <div class="lobby-badge" id="displayRoomCode">0000</div>
+        <p id="playerCount" style="font-size:12px; font-weight:bold;">Players: 1</p>
+        
+        <button class="btn" id="startBtn" onclick="hostStartGame()" style="background:#2ecc71; display:none;">START GAME</button>
+        <button class="btn" onclick="shareRoom()" style="background:#25D366">Share to WhatsApp</button>
+        <button class="btn" onclick="leaveRoom()" style="background:#e74c3c">Leave</button>
+        
+        <p id="waitMsg" style="font-size:11px; color:#666; margin-top:10px;">Waiting for host to start...</p>
+    </div>
+
+    <div id="chat-box">
+        <div id="chat-msgs"></div>
+        <div style="display:flex; border-top:1px solid #eee; padding:5px;">
+            <input id="cIn" placeholder="Chat..." style="flex:1; border:none; font-size:11px;">
+            <button onclick="sendMsg()" style="background:var(--primary); color:white; border:none; border-radius:5px; padding:5px;">🚀</button>
+        </div>
+    </div>
+
+    <button onclick="toggleChat()" style="position:absolute; bottom:25px; right:25px; z-index:60; background:var(--primary); color:white; width:50px; height:50px; border-radius:50%; border:none; font-size:25px;">💬</button>
 </div>
 
 <div id="adminPanel">
-    <h3 style="text-align:center; color:var(--admin); margin-top:0;">MASTER CONTROL</h3>
-    <div class="admin-card">
-        <b>Weather</b><br>
-        <button class="admin-btn" style="background:#3498db" onclick="setWeather('rain')">Rain</button>
-        <button class="admin-btn" style="background:#bdc3c7; color:black" onclick="setWeather('snow')">Snow</button>
-        <button class="admin-btn" style="background:#f1c40f; color:black" onclick="setWeather('coins')">Coinfall</button>
-        <button class="admin-btn" style="background:#e74c3c" onclick="setWeather('none')">Clear</button>
-    </div>
-    <div class="admin-card">
-        <b>Abuse / Pranks</b><br>
-        <button class="admin-btn" style="background:#e67e22" onclick="setAbuse('drunk')">Drunk</button>
-        <button class="admin-btn" style="background:#d35400" onclick="setAbuse('shake')">Earthquake</button>
-        <button class="admin-btn" style="background:black" onclick="setAbuse('ban')">Fake Ban</button>
-        <button class="admin-btn" style="background:#7f8c8d" onclick="setAbuse('clear')">Reset</button>
-    </div>
-    <div class="admin-card">
-        <b>Global Announcement</b><br>
-        <input id="gMsgIn" type="text" placeholder="Your message...">
-        <button class="admin-btn" style="width:95%; background:#c0392b" onclick="sendGlobalMsg()">Push Alert</button>
-    </div>
-    <div class="admin-card">
-        <b>Set Player Coins</b><br>
-        <input id="targetN" type="text" placeholder="Username" style="width:40%">
-        <input id="targetC" type="number" placeholder="Coins" style="width:40%">
-        <button class="admin-btn" style="width:95%; background:#27ae60" onclick="setBalance()">Update</button>
-    </div>
-    <div class="admin-card">
-        <b>Global DJ</b><br>
-        <input id="musUrl" type="text" placeholder="MP3 Link">
-        <button class="admin-btn" style="width:95%; background:#8e44ad" onclick="playMus()">Play Sound</button>
-    </div>
-    <button class="admin-btn" style="width:100%; background:#333; margin-top:10px;" onclick="closeAdmin()">CLOSE</button>
+    <h3 style="text-align:center; color:var(--admin); margin:0;">MASTER PANEL</h3>
+    <hr>
+    <button class="btn" style="background:#3498db; font-size:10px;" onclick="setWeather('rain')">RAIN</button>
+    <button class="btn" style="background:#f1c40f; font-size:10px;" onclick="setWeather('coins')">COINFALL</button>
+    <button class="btn" style="background:#e74c3c; font-size:10px;" onclick="setWeather('none')">CLEAR</button>
+    <input id="gMsgIn" type="text" placeholder="Global Alert Message">
+    <button class="btn" onclick="sendGlobalMsg()" style="background:red">Push Alert</button>
+    <button class="btn" onclick="closeAdmin()" style="background:#333">Close</button>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, set, onValue, push, get, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getDatabase, ref, set, onValue, push, get, query, orderByChild, limitToLast, onDisconnect, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
 const conf = { apiKey: "AIzaSyA0oEauWFRHg-VoDFUHgka2Q7AbLOt6BPc", databaseURL: "https://karbala-2fcca-default-rtdb.firebaseio.com" };
 const app = initializeApp(conf); const db = getDatabase(app);
 const canvas = document.getElementById('game'); const ctx = canvas.getContext('2d');
-const wCanvas = document.getElementById('weather-canvas'); const wCtx = wCanvas.getContext('2d');
-canvas.width = 360; canvas.height = 640; wCanvas.width = 360; wCanvas.height = 640;
+canvas.width = 360; canvas.height = 640;
 
-const bgMusic = new Audio('https://files.catbox.moe/vpt03v.mp3'); 
-bgMusic.loop = true;
-
-const dieSnd = new Audio('https://files.catbox.moe/tkzhsm.wav');
+const bgMusic = new Audio('https://files.catbox.moe/vpt03v.mp3'); bgMusic.loop = true;
 const jumpSnd = new Audio('https://assets.mixkit.co/active_storage/sfx/1359/1359-preview.mp3');
 
-let particles = []; let weatherMode = 'none';
+let currentRoom = null; let isHost = false; let others = {};
 const assets = { 
     chars: ["https://i.ibb.co/4nZsqPZn/IMG-20260403-WA0258-removebg-preview.png","https://i.ibb.co/KcbN4WFM/IMG-20260403-WA0256-removebg-preview.png","https://i.ibb.co/zV9QR1R1/IMG-20260403-WA0257-removebg-preview.png","https://i.ibb.co/3yQFCm0W/IMG-20260403-WA0259-removebg-preview.png","https://i.ibb.co/XZT4pj5r/1775227244228-removebg-preview.png"], 
     bg: "https://i.ibb.co/PsXKrn2S/1775227599134.png", 
     coin: "https://i.ibb.co/23YNrJty/1775130347248-removebg-preview.png" 
 };
-let birdImg = new Image(); let bgImg = new Image(); bgImg.src = assets.bg; let coinImg = new Image(); coinImg.src = assets.coin;
-let st = { active: false, dead: false, score: 0, coins: 0, frame: 0, bX: 0, bird: { x: 80, y: 300, v: 0, g: 0.25 }, pipes: [], gameCoins: [], charIndex: 0 };
 
-// ACCESS NAME
+let birdImg = new Image(); let bgImg = new Image(); bgImg.src = assets.bg; let coinImg = new Image(); coinImg.src = assets.coin;
+let st = { active: false, dead: false, score: 0, frame: 0, bX: 0, bird: { x: 80, y: 300, v: 0, g: 0.25 }, pipes: [], gameCoins: [], charIndex: 0 };
+
 const MY_NAME = "Rai Daim";
 
-function updateWeather() {
-    wCtx.clearRect(0,0,360,640);
-    if(weatherMode !== 'none' && Math.random() < 0.2) particles.push({ x: Math.random()*360, y: -20, speed: weatherMode==='rain'?8:2, type: weatherMode });
-    for(let i = particles.length - 1; i >= 0; i--) {
-        let p = particles[i]; p.y += p.speed;
-        if(p.type === 'rain') { wCtx.strokeStyle='#3498db'; wCtx.beginPath(); wCtx.moveTo(p.x, p.y); wCtx.lineTo(p.x, p.y+10); wCtx.stroke(); }
-        else if(p.type === 'snow') { wCtx.fillStyle='white'; wCtx.beginPath(); wCtx.arc(p.x, p.y, 3, 0, 7); wCtx.fill(); }
-        else if(p.type === 'coins') { wCtx.drawImage(coinImg, p.x, p.y, 22, 22); }
-        if(p.y > 640) particles.splice(i, 1);
-    }
-    requestAnimationFrame(updateWeather);
-}
-updateWeather();
-
-onValue(ref(db, 'events/weather'), s => weatherMode = s.val() || 'none');
-onValue(ref(db, 'events/msg'), s => {
-    if(s.val()){ 
-        const m = document.getElementById('globalMsg'); m.innerText = s.val(); 
-        m.style.display = 'block'; setTimeout(() => m.style.display='none', 5000);
-    }
-});
-onValue(ref(db, 'events/abuse'), s => {
-    const d = s.val(); if(!d) return;
-    canvas.classList.remove('drunk-mode', 'earthquake');
-    if(d.type === 'drunk') canvas.classList.add('drunk-mode');
-    else if(d.type === 'shake') canvas.classList.add('earthquake');
-    else if(d.type === 'ban' && localStorage.getItem('pUser') !== MY_NAME) { alert("⚠️ BANNED!"); location.reload(); }
-    else if(d.type === 'clear') { canvas.classList.remove('drunk-mode', 'earthquake'); }
-});
-onValue(ref(db, 'events/music'), s => { if(s.val()) new Audio(s.val()).play().catch(e=>{}); });
-
-window.setWeather = (m) => set(ref(db, 'events/weather'), m);
-window.setAbuse = (t) => set(ref(db, 'events/abuse'), { type: t, t: Date.now() });
-window.sendGlobalMsg = () => set(ref(db, 'events/msg'), document.getElementById('gMsgIn').value);
-window.playMus = () => set(ref(db, 'events/music'), document.getElementById('musUrl').value);
-window.setBalance = () => {
-    const n = document.getElementById('targetN').value.replace(/\W/g, '');
-    const a = parseInt(document.getElementById('targetC').value);
-    set(ref(db, 'users/'+n+'/coins'), a).then(()=>alert("Done!"));
+// Login
+window.login = () => {
+    const n = document.getElementById('uIn').value.trim();
+    if(n.length > 1) { localStorage.setItem('pUser', n); showMenu(); }
 };
 
-window.login = () => { 
-    const n = document.getElementById('uIn').value.trim(); 
-    if(n.length>1){ 
-        localStorage.setItem('pUser', n); 
-        if (bgMusic.paused) bgMusic.play().catch(e => {}); 
-        showMenu(); 
-    } 
-};
-
-window.logout = () => {
-    localStorage.removeItem('pUser');
-    location.reload();
-};
+window.logout = () => { localStorage.removeItem('pUser'); location.reload(); };
 
 window.showMenu = () => {
-    const u = localStorage.getItem('pUser'); if(!u) return;
-    document.getElementById('loginPage').style.display='none'; 
-    document.getElementById('startMenu').style.display='flex';
+    document.querySelectorAll('.overlay').forEach(p => p.style.display = 'none');
+    document.getElementById('startMenu').style.display = 'flex';
+    document.getElementById('hud').style.display = 'none';
     
-    // ADMIN CHECK
-    if(u === MY_NAME) {
-        document.getElementById('adminBtn').style.display = 'block';
-    } else {
-        document.getElementById('adminBtn').style.display = 'none';
-    }
+    const u = localStorage.getItem('pUser');
+    if(u === MY_NAME) document.getElementById('adminBtn').style.display = 'block';
 
-    onValue(ref(db, 'users/'+u.replace(/\W/g, '')+'/coins'), s => {
-        const val = s.val()||0;
-        document.getElementById('totalCoins').innerText = val;
-        document.getElementById('coinDisplay').innerText = val;
+    onValue(ref(db, `users/${u.replace(/\W/g,'')}/coins`), s => {
+        document.getElementById('totalCoins').innerText = s.val() || 0;
+        document.getElementById('coinDisplay').innerText = s.val() || 0;
     });
     syncLB(); updateCharUI();
 };
 
+// Multiplayer Logic
+window.openMultiMenu = () => {
+    document.getElementById('startMenu').style.display = 'none';
+    document.getElementById('multiMenu').style.display = 'flex';
+};
+
+window.createRoomAction = () => {
+    const code = Math.floor(1000 + Math.random() * 9000);
+    isHost = true;
+    joinRoom(code);
+};
+
+window.joinRoomAction = () => {
+    const code = document.getElementById('roomIn').value;
+    if(code.length < 2) return alert("Valid code daalein!");
+    isHost = false;
+    joinRoom(code);
+};
+
+function joinRoom(code) {
+    currentRoom = code;
+    const uName = localStorage.getItem('pUser');
+    const uKey = uName.replace(/\W/g,'');
+    
+    document.querySelectorAll('.overlay').forEach(p => p.style.display = 'none');
+    document.getElementById('roomLobby').style.display = 'flex';
+    document.getElementById('displayRoomCode').innerText = code;
+    
+    // Lobby UI based on Host/Player
+    document.getElementById('startBtn').style.display = isHost ? 'block' : 'none';
+    document.getElementById('waitMsg').style.display = isHost ? 'none' : 'block';
+
+    const roomRef = ref(db, `rooms/${code}`);
+    const pRef = ref(db, `rooms/${code}/players/${uKey}`);
+    
+    // Create room status if Host
+    if(isHost) set(ref(db, `rooms/${code}/status`), "waiting");
+
+    set(pRef, { name: uName, y: 300, char: st.charIndex });
+    onDisconnect(pRef).remove();
+
+    // Listen for Player Count & Game Start
+    onValue(ref(db, `rooms/${code}/players`), s => {
+        const players = s.val() || {};
+        others = players;
+        document.getElementById('playerCount').innerText = `Players: ${Object.keys(players).length}`;
+    });
+
+    onValue(ref(db, `rooms/${code}/status`), s => {
+        if(s.val() === "playing") startGame();
+    });
+}
+
+window.hostStartGame = () => {
+    if(isHost) set(ref(db, `rooms/${currentRoom}/status`), "playing");
+};
+
+window.shareRoom = () => {
+    const code = document.getElementById('displayRoomCode').innerText;
+    const text = `Pookie Launcher join karo! Room Code: ${code}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
+};
+
+window.leaveRoom = () => {
+    if(currentRoom) remove(ref(db, `rooms/${currentRoom}/players/${localStorage.getItem('pUser').replace(/\W/g,'')}`));
+    showMenu();
+};
+
 window.startGame = () => {
-    document.getElementById('startMenu').style.display='none'; 
-    document.getElementById('hud').style.display='flex';
+    document.querySelectorAll('.overlay').forEach(p => p.style.display = 'none');
+    document.getElementById('hud').style.display = 'flex';
     birdImg.src = assets.chars[st.charIndex];
     st = { ...st, active: true, dead: false, score: 0, frame: 0, pipes: [], gameCoins: [], bird: { x: 80, y: 300, v: 0, g: 0.25 } };
     loop();
 };
 
 function loop() {
-    if(!st.active) return; 
+    if(!st.active) return;
     ctx.clearRect(0,0,360,640);
     st.bX -= 1.5; ctx.drawImage(bgImg, st.bX, 0, 360, 640); ctx.drawImage(bgImg, st.bX+360, 0, 360, 640); if(st.bX<=-360) st.bX=0;
-    
+
     if(!st.dead) {
         st.bird.v += st.bird.g; st.bird.y += st.bird.v;
-        if(st.frame%100===0) {
-            let py = Math.random()*250+100;
-            st.pipes.push({x:360, y:py, passed:false});
-            if(Math.random() > 0.5) st.gameCoins.push({x:360 + 20, y: py + 70, collected: false});
+        if(st.frame % 100 === 0) {
+            let py = Math.random() * 250 + 100;
+            st.pipes.push({ x: 360, y: py, passed: false });
+            if(Math.random() > 0.6) st.gameCoins.push({ x: 380, y: py + 75, collected: false });
+        }
+        if(currentRoom) set(ref(db, `rooms/${currentRoom}/players/${localStorage.getItem('pUser').replace(/\W/g,'')}/y`), st.bird.y);
+    }
+
+    // Multiplayer Birds (Ghost)
+    const myId = localStorage.getItem('pUser').replace(/\W/g,'');
+    for(let id in others) {
+        if(id !== myId) {
+            let p = others[id];
+            ctx.globalAlpha = 0.4;
+            let gImg = new Image(); gImg.src = assets.chars[p.char];
+            ctx.drawImage(gImg, 80-20, p.y-20, 40, 40);
+            ctx.globalAlpha = 1.0;
         }
     }
 
-    st.pipes.forEach((p, i) => { 
-        if(!st.dead) p.x -= 2.5; 
-        ctx.fillStyle="#2ecc71"; ctx.fillRect(p.x,0,55,p.y); ctx.fillRect(p.x,p.y+180,55,640); 
-        if(!st.dead && st.bird.x+15>p.x && st.bird.x-15<p.x+55 && (st.bird.y-15<p.y || st.bird.y+15>p.y+180)) die();
+    // My Bird
+    ctx.drawImage(birdImg, st.bird.x-25, st.bird.y-25, 50, 50);
+
+    // Pipes & Coins Logic
+    st.pipes.forEach((p, i) => {
+        if(!st.dead) p.x -= 2.5;
+        ctx.fillStyle = "#2ecc71";
+        ctx.fillRect(p.x, 0, 52, p.y);
+        ctx.fillRect(p.x, p.y + 180, 52, 640);
+        if(!st.dead && st.bird.x+15 > p.x && st.bird.x-15 < p.x+52 && (st.bird.y-15 < p.y || st.bird.y+15 > p.y+180)) die();
         if(!p.passed && p.x < st.bird.x) { p.passed=true; st.score++; document.getElementById('scoreDisplay').innerText = st.score; }
         if(p.x < -60) st.pipes.splice(i, 1);
     });
 
     st.gameCoins.forEach((c, i) => {
-        if(!st.dead) c.x -= 2.5; 
+        if(!st.dead) c.x -= 2.5;
         if(!c.collected) {
             ctx.drawImage(coinImg, c.x, c.y, 30, 30);
-            if(!st.dead && Math.hypot(st.bird.x - (c.x+15), st.bird.y - (c.y+15)) < 30) {
-                c.collected = true; addCoin();
-            }
+            if(Math.hypot(st.bird.x - (c.x+15), st.bird.y - (c.y+15)) < 30) { c.collected = true; addCoin(); }
         }
-        if(c.x < -60) st.gameCoins.splice(i, 1);
     });
 
-    ctx.drawImage(birdImg, st.bird.x-25, st.bird.y-25, 50, 50);
-    if(!st.dead && (st.bird.y>640 || st.bird.y<0)) die();
-    if(!st.dead) st.frame++; 
+    if(!st.dead && (st.bird.y > 640 || st.bird.y < 0)) die();
+    if(!st.dead) st.frame++;
     requestAnimationFrame(loop);
 }
 
+function die() {
+    if(st.dead) return; st.dead = true;
+    if(currentRoom) remove(ref(db, `rooms/${currentRoom}/players/${localStorage.getItem('pUser').replace(/\W/g,'')}`));
+    setTimeout(() => { st.active = false; showMenu(); }, 1200);
+}
+
 function addCoin() {
-    const u = localStorage.getItem('pUser').replace(/\W/g, '');
-    get(ref(db, 'users/'+u+'/coins')).then(s => set(ref(db, 'users/'+u+'/coins'), (s.val()||0)+5));
+    const u = localStorage.getItem('pUser').replace(/\W/g,'');
+    get(ref(db, `users/${u}/coins`)).then(s => set(ref(db, `users/${u}/coins`), (s.val()||0)+5));
 }
 
-function die() { 
-    if(st.dead) return; st.dead = true; 
-    st.bird.v = 0; st.bird.g = 0;
-    dieSnd.play();
-    setTimeout(() => { 
-        st.active=false; showMenu(); 
-        document.getElementById('hud').style.display='none'; 
-    }, 1500); 
-}
-
-function syncLB() {
-    const lbRef = query(ref(db, 'users'), orderByChild('coins'), limitToLast(10));
-    onValue(lbRef, (s) => {
-        let l = document.getElementById('leaderboardList');
-        l.innerHTML = '<div style="text-align:center; font-weight:bold; color:var(--primary); font-size:12px; margin-bottom:5px;">🏆 LEADERBOARD</div>';
-        let players = []; s.forEach(x => { players.push({name: x.key, coins: x.val().coins}); });
-        players.sort((a,b) => b.coins - a.coins).forEach((p, i) => {
-            l.innerHTML += `<div class="lb-row"><span>${i+1}. ${p.name}</span><b>💰 ${p.coins||0}</b></div>`;
-        });
-    });
-}
-
-window.toggleChat = () => { const c = document.getElementById('chat-box'); c.style.display = (c.style.display==='flex'?'none':'flex'); };
-window.sendMsg = () => { const i = document.getElementById('cIn'); if(i.value) push(ref(db,'chat'),{u:localStorage.getItem('pUser'),m:i.value}); i.value=''; };
-onValue(query(ref(db,'chat'), limitToLast(12)), s => {
+// UI Helpers
+window.toggleChat = () => { const c = document.getElementById('chat-box'); c.style.display = c.style.display==='flex'?'none':'flex'; };
+window.sendMsg = () => {
+    const i = document.getElementById('cIn');
+    if(i.value) push(ref(db, 'globalChat'), { u: localStorage.getItem('pUser'), m: i.value });
+    i.value = '';
+};
+onValue(query(ref(db, 'globalChat'), limitToLast(10)), s => {
     const l = document.getElementById('chat-msgs'); l.innerHTML = '';
-    s.forEach(x => { const d=x.val(); l.innerHTML += `<div><b style="color:var(--primary)">${d.u}:</b> ${d.m}</div>`; });
+    s.forEach(x => { const d = x.val(); l.innerHTML += `<div><b>${d.u}:</b> ${d.m}</div>`; });
     l.scrollTop = l.scrollHeight;
 });
 
+function syncLB() {
+    onValue(query(ref(db, 'users'), orderByChild('coins'), limitToLast(10)), s => {
+        let h = '<b style="color:var(--primary); font-size:12px;">🏆 LEADERBOARD</b>';
+        let arr = []; s.forEach(x => arr.push({n: x.key, c: x.val().coins}));
+        arr.reverse().forEach((p, i) => h += `<div class="lb-row"><span>${i+1}. ${p.n}</span><b>${p.c||0}</b></div>`);
+        document.getElementById('leaderboardList').innerHTML = h;
+    });
+}
+
 window.openAdmin = () => document.getElementById('adminPanel').style.display='block';
 window.closeAdmin = () => document.getElementById('adminPanel').style.display='none';
-window.addEventListener('touchstart', (e) => { 
-    if(st.active && !st.dead) { st.bird.v = -5.5; jumpSnd.currentTime=0; jumpSnd.play(); } 
-    if(bgMusic.paused) bgMusic.play();
-});
-window.addEventListener('mousedown', (e) => { 
-    if(st.active && !st.dead && !e.target.closest('#adminPanel')) { st.bird.v = -5.5; jumpSnd.currentTime=0; jumpSnd.play(); } 
-    if(bgMusic.paused) bgMusic.play();
-});
 window.changeChar = (dir) => { st.charIndex = (st.charIndex + dir + assets.chars.length) % assets.chars.length; updateCharUI(); };
 function updateCharUI() { document.getElementById('charAvatar').src = assets.chars[st.charIndex]; }
+
+// Controls
+const jump = () => { if(st.active && !st.dead) st.bird.v = -5.5; if(bgMusic.paused) bgMusic.play(); };
+window.addEventListener('mousedown', (e) => { if(e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') jump(); });
+window.addEventListener('touchstart', (e) => { if(e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') jump(); });
 
 if(localStorage.getItem('pUser')) showMenu();
 </script>
