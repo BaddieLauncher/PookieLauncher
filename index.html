@@ -7,23 +7,16 @@
 <style>
     :root { --primary: #ff1493; --bg: #0f0c29; --card: rgba(255, 255, 255, 0.98); --admin: #9b59b6; }
     body { margin:0; font-family: 'Segoe UI', sans-serif; background: #000; display:flex; justify-content:center; align-items:center; height:100vh; overflow:hidden; }
-    
     #game-container { position: relative; width: 360px; height: 640px; background: #fff; border-radius: 24px; overflow: hidden; box-shadow: 0 0 50px rgba(255, 20, 147, 0.4); }
     canvas { position: absolute; top:0; left:0; width: 100%; height: 100%; }
-
     .overlay { position:absolute; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index: 50; background: var(--card); backdrop-filter: blur(10px); text-align: center; }
     input { margin:8px 0; padding:12px; border-radius:12px; border: 2px solid var(--primary); width:75%; outline: none; text-align: center; font-weight: bold; }
     .btn { background: var(--primary); color: white; border:none; padding:12px 30px; font-weight:700; border-radius:50px; cursor:pointer; font-size:14px; margin-top: 8px; width: 80%; transition: 0.2s; text-transform: uppercase; }
-    .btn:active { transform: scale(0.95); }
-
     #hud { position: absolute; top: 30px; width: 100%; display: none; justify-content: space-between; z-index: 10; padding: 0 20px; box-sizing: border-box; pointer-events: none; }
-    #global-alert { position: absolute; top: 100px; width: 90%; left: 5%; background: var(--primary); color: white; padding: 12px; border-radius: 12px; font-weight: bold; display: none; z-index: 100; animation: shake 0.5s infinite; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-    @keyframes shake { 0%, 100% {transform: translateX(0)} 25% {transform: translateX(-2px)} 75% {transform: translateX(2px)} }
-
-    #adminPanel { display:none; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:300px; background: white; padding: 20px; border-radius: 25px; z-index: 200; border: 3px solid var(--admin); box-shadow: 0 0 100px rgba(0,0,0,0.5); }
+    #global-alert { position: absolute; top: 100px; width: 90%; left: 5%; background: var(--primary); color: white; padding: 12px; border-radius: 12px; font-weight: bold; display: none; z-index: 100; text-align: center; }
+    #adminPanel { display:none; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:300px; background: white; padding: 20px; border-radius: 25px; z-index: 200; border: 3px solid var(--admin); }
     #chat-box { position: absolute; bottom: 85px; right: 15px; width: 220px; height: 200px; background: white; border-radius: 15px; display: none; flex-direction: column; z-index: 60; border: 1px solid #ddd; }
     #chat-msgs { flex: 1; overflow-y: auto; padding: 10px; font-size: 11px; }
-
     #respawn-timer { position: absolute; top: 40%; width: 100%; text-align: center; color: var(--primary); font-size: 60px; font-weight: 900; z-index: 100; display: none; text-shadow: 0 0 15px white; }
 </style>
 </head>
@@ -31,19 +24,15 @@
 
 <div id="game-container">
     <div id="global-alert">📢 ADMIN: <span id="alert-text"></span></div>
-    
     <div id="hud">
         <div id="scoreDisplay" style="font-size: 30px; font-weight: 900; color: white; text-shadow: 2px 2px #ff1493;">0</div>
         <div id="coinDisplay" style="font-size: 30px; font-weight: 900; color: gold; text-shadow: 2px 2px #000;">0</div>
     </div>
-
     <div id="respawn-timer">3</div>
-
     <canvas id="game"></canvas>
 
     <div id="loginPage" class="overlay">
-        <h1 style="color:var(--primary); margin:0; font-size: 40px; letter-spacing: 2px;">POOKIE</h1>
-        <p style="font-size: 10px; color: #666;">BY RAI DAIM</p>
+        <h1 style="color:var(--primary); margin:0; font-size: 40px;">POOKIE</h1>
         <input id="uIn" type="text" placeholder="Your Nickname">
         <button class="btn" onclick="login()">Enter Arena</button>
     </div>
@@ -51,58 +40,47 @@
     <div id="startMenu" class="overlay" style="display:none;">
         <div id="adminBtn" onclick="openAdmin()" style="display:none; position:absolute; top:20px; left:20px; color:var(--admin); cursor:pointer; font-size:28px;">👑</div>
         <h2 style="color:#f1c40f; margin:5px;">💰 <span id="totalCoinsDisplay">0</span></h2>
-        
         <div style="display:flex; align-items:center; gap:15px; margin: 10px;">
-            <button onclick="changeChar(-1)" style="font-size:30px; background:none; border:none; color:var(--primary); cursor:pointer;">◀</button>
-            <img id="charAvatar" src="" style="width:85px; height:85px; border-radius:50%; border:4px solid var(--primary); background:#fff; box-shadow: 0 5px 15px rgba(255,20,147,0.3);">
-            <button onclick="changeChar(1)" style="font-size:30px; background:none; border:none; color:var(--primary); cursor:pointer;">▶</button>
+            <button onclick="changeChar(-1)" style="font-size:30px; background:none; border:none; color:var(--primary);">◀</button>
+            <img id="charAvatar" src="" style="width:85px; height:85px; border-radius:50%; border:4px solid var(--primary); background:#fff;">
+            <button onclick="changeChar(1)" style="font-size:30px; background:none; border:none; color:var(--primary);">▶</button>
         </div>
-
         <button class="btn" onclick="startGame(false)">Solo Play</button>
         <button class="btn" onclick="openMultiMenu()" style="background:#3498db">Multiplayer Mode</button>
-        
         <div id="lb-box" style="width: 85%; margin-top:15px; height: 110px; overflow-y: auto; background: #f9f9f9; border-radius: 12px; border: 1px solid #eee;">
             <div id="leaderboardList"></div>
         </div>
-        <div onclick="logout()" style="margin-top:10px; color:#aaa; font-size:11px; cursor:pointer;">SWITCH ACCOUNT</div>
     </div>
 
     <div id="multiMenu" class="overlay" style="display:none;">
         <h2 style="color:var(--primary)">ROOM SYSTEM</h2>
-        <input id="roomIn" type="text" placeholder="Enter 4-Digit Code">
-        <button class="btn" onclick="joinRoomAction()" style="background:#2ecc71">Join Private Room</button>
-        <button class="btn" onclick="createRoomAction()" style="background:#f39c12">Host New Room</button>
-        <button class="btn" onclick="showMenu()" style="background:#999">Main Menu</button>
+        <input id="roomIn" type="text" placeholder="Enter Room Code">
+        <button class="btn" onclick="joinRoomAction()" style="background:#2ecc71">Join Room</button>
+        <button class="btn" onclick="createRoomAction()" style="background:#f39c12">Host Room</button>
+        <button class="btn" onclick="showMenu()" style="background:#999">Back</button>
     </div>
 
     <div id="roomLobby" class="overlay" style="display:none;">
-        <h3 style="margin:0; color: #333;">LOBBY</h3>
-        <div id="displayRoomCode" style="font-size:35px; font-weight:900; color:var(--primary); margin:10px; letter-spacing: 5px;">0000</div>
-        <p id="playerCount" style="font-size:14px; font-weight:bold; color: #555;">Waiting for players...</p>
+        <div id="displayRoomCode" style="font-size:35px; font-weight:900; color:var(--primary); margin:10px;">0000</div>
+        <p id="playerCount" style="font-size:14px; font-weight:bold;">Waiting...</p>
         <button class="btn" id="startBtn" onclick="hostStartGame()" style="background:#2ecc71; display:none;">START MATCH</button>
         <button class="btn" onclick="shareRoom()" style="background:#25D366">WhatsApp Code</button>
-        <button class="btn" onclick="leaveRoom()" style="background:#e74c3c">Leave Lobby</button>
+        <button class="btn" onclick="leaveRoom()" style="background:#e74c3c">Leave</button>
     </div>
 
     <div id="chat-box">
         <div id="chat-msgs"></div>
-        <div style="display:flex; border-top:1px solid #eee; padding:5px;">
-            <input id="cIn" placeholder="Global chat..." style="flex:1; border:none; font-size:11px;">
-            <button onclick="sendMsg()" style="background:var(--primary); color:white; border:none; border-radius:5px; padding:5px;">🚀</button>
-        </div>
+        <div style="display:flex; padding:5px;"><input id="cIn" style="flex:1;"><button onclick="sendMsg()">🚀</button></div>
     </div>
-
-    <button onclick="toggleChat()" style="position:absolute; bottom:25px; right:25px; z-index:60; background:var(--primary); color:white; width:50px; height:50px; border-radius:50%; border:none; font-size:25px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">💬</button>
+    <button onclick="toggleChat()" style="position:absolute; bottom:25px; right:25px; width:50px; height:50px; border-radius:50%; background:var(--primary); color:white; border:none; font-size:25px; z-index:60;">💬</button>
 </div>
 
 <div id="adminPanel">
-    <h3 style="text-align:center; color:var(--admin); margin:0;">👑 MASTER CONTROL</h3>
-    <hr>
-    <label style="font-size:12px; font-weight: bold;">Global Alert Text:</label>
-    <input id="adminMsgIn" type="text" placeholder="Type message for everyone...">
-    <button class="btn" onclick="pushGlobalAlert()" style="background:red; font-size:12px;">Push Alert to All</button>
-    <button class="btn" onclick="clearGlobalAlert()" style="background:orange; font-size:12px;">Remove Alert</button>
-    <button class="btn" onclick="closeAdmin()" style="background:#333; margin-top:15px;">Exit Panel</button>
+    <h3 style="text-align:center;">👑 MASTER CONTROL</h3>
+    <input id="adminMsgIn" type="text" placeholder="Alert message...">
+    <button class="btn" onclick="pushGlobalAlert()" style="background:red;">Push Alert</button>
+    <button class="btn" onclick="clearGlobalAlert()" style="background:orange;">Clear</button>
+    <button class="btn" onclick="closeAdmin()" style="background:#333;">Close</button>
 </div>
 
 <script type="module">
@@ -114,7 +92,10 @@ const app = initializeApp(conf); const db = getDatabase(app);
 const canvas = document.getElementById('game'); const ctx = canvas.getContext('2d');
 canvas.width = 360; canvas.height = 640;
 
-const bgMusic = new Audio('https://files.catbox.moe/vpt03v.mp3'); bgMusic.loop = true;
+// NEW MUSIC LINKED HERE
+const bgMusic = new Audio('https://files.catbox.moe/yjeo65.mp3'); 
+bgMusic.loop = true; // REPEAT SET TO TRUE
+
 const jumpSnd = new Audio('https://assets.mixkit.co/active_storage/sfx/1359/1359-preview.mp3');
 const coinSnd = new Audio('https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3');
 
@@ -130,11 +111,7 @@ let st = { active: false, dead: false, score: 0, frame: 0, bX: 0, bird: { x: 80,
 
 const MY_NAME = "Rai Daim";
 
-window.login = () => {
-    const n = document.getElementById('uIn').value.trim();
-    if(n.length > 1) { localStorage.setItem('pUser', n); showMenu(); }
-};
-
+window.login = () => { const n = document.getElementById('uIn').value.trim(); if(n.length>1){localStorage.setItem('pUser',n); showMenu();} };
 window.logout = () => { localStorage.removeItem('pUser'); location.reload(); };
 
 window.showMenu = () => {
@@ -142,23 +119,17 @@ window.showMenu = () => {
     document.getElementById('startMenu').style.display = 'flex';
     document.getElementById('hud').style.display = 'none';
     isMultiplayer = false;
-    
-    const uKey = (localStorage.getItem('pUser') || "").replace(/\W/g,'');
+    const uKey = (localStorage.getItem('pUser')||"").replace(/\W/g,'');
     if(localStorage.getItem('pUser') === MY_NAME) document.getElementById('adminBtn').style.display = 'block';
-    
     onValue(ref(db, `users/${uKey}/coins`), s => {
-        const val = s.val() || 0;
-        document.getElementById('totalCoinsDisplay').innerText = val;
-        document.getElementById('coinDisplay').innerText = val;
+        document.getElementById('totalCoinsDisplay').innerText = s.val()||0;
+        document.getElementById('coinDisplay').innerText = s.val()||0;
     });
-
     onValue(ref(db, 'adminAlert'), s => {
         const msg = s.val();
-        const alertBox = document.getElementById('global-alert');
-        if(msg) { alertBox.style.display = 'block'; document.getElementById('alert-text').innerText = msg; }
-        else { alertBox.style.display = 'none'; }
+        document.getElementById('global-alert').style.display = msg?'block':'none';
+        document.getElementById('alert-text').innerText = msg||"";
     });
-
     syncLB(); updateCharUI();
 };
 
@@ -179,9 +150,7 @@ window.startGame = (multi) => {
 function resetGameState() {
     st = { ...st, active: true, dead: false, score: 0, frame: 0, pipes: [], gameCoins: [], bird: { x: 80, y: 300, v: 0, g: 0.25 } };
     document.getElementById('scoreDisplay').innerText = "0";
-    if(isMultiplayer && currentRoom) {
-        update(ref(db, `rooms/${currentRoom}/players/${localStorage.getItem('pUser').replace(/\W/g,'')}`), { dead: false, y: 300 });
-    }
+    if(isMultiplayer && currentRoom) update(ref(db, `rooms/${currentRoom}/players/${localStorage.getItem('pUser').replace(/\W/g,'')}`), { dead: false, y: 300 });
 }
 
 function loop() {
@@ -199,19 +168,15 @@ function loop() {
         if(isMultiplayer) update(ref(db, `rooms/${currentRoom}/players/${localStorage.getItem('pUser').replace(/\W/g,'')}`), { y: st.bird.y });
     }
 
-    // Coins
-    st.gameCoins.forEach((c) => {
+    st.gameCoins.forEach(c => {
         if(!st.dead) c.x -= 2.5;
         if(!c.collected) {
             ctx.drawImage(coinImg, c.x, c.y, 30, 30);
-            if(Math.hypot(st.bird.x - (c.x+15), st.bird.y - (c.y+15)) < 30) {
-                c.collected = true; coinSnd.play(); addCoin(); 
-            }
+            if(Math.hypot(st.bird.x-(c.x+15), st.bird.y-(c.y+15)) < 30) { c.collected=true; coinSnd.play(); addCoin(); }
         }
     });
 
-    // Pipes
-    st.pipes.forEach((p) => {
+    st.pipes.forEach(p => {
         if(!st.dead) p.x -= 2.5;
         ctx.fillStyle = "#2ecc71";
         ctx.fillRect(p.x, 0, 52, p.y);
@@ -220,17 +185,12 @@ function loop() {
         if(!p.passed && p.x < st.bird.x) { p.passed=true; st.score++; document.getElementById('scoreDisplay').innerText = st.score; }
     });
 
-    // Ghost Players
-    const myId = (localStorage.getItem('pUser') || "").replace(/\W/g,'');
     for(let id in others) {
-        if(id !== myId) {
-            let p = others[id];
-            ctx.globalAlpha = p.dead ? 0.1 : 0.5;
+        if(id !== localStorage.getItem('pUser').replace(/\W/g,'')) {
+            let p = others[id]; ctx.globalAlpha = p.dead?0.1:0.5;
             let gImg = new Image(); gImg.src = assets.chars[p.char];
-            ctx.drawImage(gImg, 80-20, p.y-20, 40, 40);
-            ctx.globalAlpha = 1.0;
-            ctx.fillStyle = "#000"; ctx.font = "bold 10px Arial"; ctx.textAlign = "center";
-            ctx.fillText(p.name, 80, p.y - 25);
+            ctx.drawImage(gImg, 80-20, p.y-20, 40, 40); ctx.globalAlpha = 1.0;
+            ctx.fillStyle = "#000"; ctx.font = "bold 10px Arial"; ctx.textAlign = "center"; ctx.fillText(p.name, 80, p.y - 25);
         }
     }
 
@@ -242,81 +202,55 @@ function loop() {
 
 function die() {
     if(st.dead) return; st.dead = true;
-    const uKey = localStorage.getItem('pUser').replace(/\W/g,'');
     if(isMultiplayer) {
-        update(ref(db, `rooms/${currentRoom}/players/${uKey}`), { dead: true });
-        let count = 2;
-        const rt = document.getElementById('respawn-timer');
-        rt.style.display = 'block'; rt.innerText = count;
-        let inter = setInterval(() => {
-            count--; rt.innerText = count;
-            if(count <= 0) { clearInterval(inter); rt.style.display = 'none'; resetGameState(); }
-        }, 1000);
-    } else {
-        setTimeout(() => { st.active = false; showMenu(); }, 1200);
-    }
+        update(ref(db, `rooms/${currentRoom}/players/${localStorage.getItem('pUser').replace(/\W/g,'')}`), { dead: true });
+        let c = 2; const rt = document.getElementById('respawn-timer');
+        rt.style.display = 'block'; rt.innerText = c;
+        let i = setInterval(() => { c--; rt.innerText = c; if(c<=0){clearInterval(i); rt.style.display='none'; resetGameState();} }, 1000);
+    } else { setTimeout(() => { st.active = false; showMenu(); }, 1200); }
 }
 
 function addCoin() {
     const uKey = localStorage.getItem('pUser').replace(/\W/g,'');
-    get(ref(db, `users/${uKey}/coins`)).then(s => {
-        set(ref(db, `users/${uKey}/coins`), (s.val()||0) + 5);
-    });
+    get(ref(db, `users/${uKey}/coins`)).then(s => set(ref(db, `users/${uKey}/coins`), (s.val()||0)+5));
 }
 
-// Room Functions
 window.createRoomAction = () => { isHost = true; joinRoom(Math.floor(1000 + Math.random() * 9000)); };
-window.joinRoomAction = () => { 
-    const c = document.getElementById('roomIn').value;
-    if(c) { isHost = false; joinRoom(c); }
-};
+window.joinRoomAction = () => { const c = document.getElementById('roomIn').value; if(c){isHost=false; joinRoom(c);} };
 function joinRoom(code) {
     currentRoom = code; isMultiplayer = true;
-    const uKey = localStorage.getItem('pUser').replace(/\W/g,'');
     document.querySelectorAll('.overlay').forEach(p => p.style.display = 'none');
     document.getElementById('roomLobby').style.display = 'flex';
     document.getElementById('displayRoomCode').innerText = code;
     document.getElementById('startBtn').style.display = isHost ? 'block' : 'none';
     if(isHost) set(ref(db, `rooms/${code}/status`), "waiting");
-    
-    const pRef = ref(db, `rooms/${code}/players/${uKey}`);
+    const pRef = ref(db, `rooms/${code}/players/${localStorage.getItem('pUser').replace(/\W/g,'')}`);
     set(pRef, { name: localStorage.getItem('pUser'), y: 300, char: st.charIndex, dead: false });
     onDisconnect(pRef).remove();
-    onValue(ref(db, `rooms/${code}/players`), s => {
-        others = s.val() || {};
-        document.getElementById('playerCount').innerText = `Players: ${Object.keys(others).length}`;
-    });
+    onValue(ref(db, `rooms/${code}/players`), s => { others = s.val() || {}; document.getElementById('playerCount').innerText = `Players: ${Object.keys(others).length}`; });
     onValue(ref(db, `rooms/${code}/status`), s => { if(s.val() === "playing") startGame(true); });
 }
+
 window.hostStartGame = () => { if(isHost) set(ref(db, `rooms/${currentRoom}/status`), "playing"); };
 window.leaveRoom = () => { remove(ref(db, `rooms/${currentRoom}/players/${localStorage.getItem('pUser').replace(/\W/g,'')}`)); showMenu(); };
-window.shareRoom = () => window.open(`https://wa.me/?text=Pookie Room Code: ${currentRoom}`);
+window.shareRoom = () => window.open(`https://wa.me/?text=Pookie Code: ${currentRoom}`);
 
-// Admin Panel
-window.pushGlobalAlert = () => {
-    const msg = document.getElementById('adminMsgIn').value;
-    if(msg) set(ref(db, 'adminAlert'), msg);
-    document.getElementById('adminMsgIn').value = '';
-};
+window.pushGlobalAlert = () => { const m = document.getElementById('adminMsgIn').value; if(m) set(ref(db, 'adminAlert'), m); document.getElementById('adminMsgIn').value=''; };
 window.clearGlobalAlert = () => set(ref(db, 'adminAlert'), null);
 window.openAdmin = () => document.getElementById('adminPanel').style.display='block';
 window.closeAdmin = () => document.getElementById('adminPanel').style.display='none';
 
-// Chat & LB
 window.toggleChat = () => { const c = document.getElementById('chat-box'); c.style.display = c.style.display==='flex'?'none':'flex'; };
-window.sendMsg = () => {
-    const i = document.getElementById('cIn');
-    if(i.value) push(ref(db, 'globalChat'), { u: localStorage.getItem('pUser'), m: i.value });
-    i.value = '';
-};
+window.sendMsg = () => { const i = document.getElementById('cIn'); if(i.value) push(ref(db, 'globalChat'), { u: localStorage.getItem('pUser'), m: i.value }); i.value = ''; };
 onValue(query(ref(db, 'globalChat'), limitToLast(10)), s => {
     const l = document.getElementById('chat-msgs'); l.innerHTML = '';
     s.forEach(x => { const d = x.val(); l.innerHTML += `<div><b>${d.u}:</b> ${d.m}</div>`; });
     l.scrollTop = l.scrollHeight;
 });
+
 function syncLB() {
     onValue(query(ref(db, 'users'), orderByChild('coins'), limitToLast(10)), s => {
-        let h = '<b style="color:var(--primary); font-size:12px; display:block; padding:5px;">🏆 TOP PLAYERS</b>';
+        let h = '<b style="padding:5px; font-size:12px;">🏆 TOP PLAYERS</b>';
         let arr = []; s.forEach(x => arr.push({n: x.key, c: x.val().coins}));
         arr.reverse().forEach((p, i) => h += `<div style="display:flex; justify-content:space-between; font-size:10px; padding:2px 10px;"><span>${i+1}. ${p.n}</span><b>${p.c||0}</b></div>`);
         document.getElementById('leaderboardList').innerHTML = h;
@@ -326,7 +260,10 @@ function syncLB() {
 window.changeChar = (dir) => { st.charIndex = (st.charIndex + dir + assets.chars.length) % assets.chars.length; updateCharUI(); };
 function updateCharUI() { document.getElementById('charAvatar').src = assets.chars[st.charIndex]; }
 
-const jump = () => { if(st.active && !st.dead) { st.bird.v = -5.5; jumpSnd.currentTime=0; jumpSnd.play(); } if(bgMusic.paused) bgMusic.play(); };
+const jump = () => { 
+    if(st.active && !st.dead) { st.bird.v = -5.5; jumpSnd.currentTime=0; jumpSnd.play(); } 
+    if(bgMusic.paused) bgMusic.play(); // Starts on first interaction
+};
 window.addEventListener('mousedown', (e) => { if(e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') jump(); });
 window.addEventListener('touchstart', (e) => { if(e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') jump(); });
 
