@@ -6,7 +6,7 @@
 <title>Pookie Launcher | Rai Daim Pro</title>
 <style>
     :root { --primary: #ff1493; --bg: #0f0c29; --card: rgba(0, 0, 0, 0.45); --admin: #9b59b6; --white-glow: 0 0 15px rgba(255, 255, 255, 0.6); }
-    body { margin:0; font-family: 'Segoe UI', sans-serif; background: #000; display:flex; justify-content:center; align-items:center; height:100vh; overflow:hidden; }
+    body { margin:0; font-family: 'Segoe UI', sans-serif; background: #000; display:flex; justify-content:center; align-items:center; height:100vh; overflow:hidden; touch-action: none; }
     #game-container { position: relative; width: 360px; height: 640px; background: #fff; border-radius: 24px; overflow: hidden; box-shadow: 0 0 50px rgba(255, 20, 147, 0.4); border: 2px solid white; }
     canvas { position: absolute; top:0; left:0; width: 100%; height: 100%; }
     .overlay { position:absolute; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index: 50; background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://i.ibb.co/y1bzDbb/1775837070550.png'); background-size: cover; background-position: center; backdrop-filter: blur(12px); text-align: center; }
@@ -137,21 +137,17 @@ window.logout = () => { localStorage.removeItem('pUser'); location.reload(); };
 window.changeUsername = () => { const n = prompt("Enter new nickname:", localStorage.getItem('pUser')); if(n && n.length > 1) { localStorage.setItem('pUser', n); showMenu(); } };
 window.showMenu = () => { const user = localStorage.getItem('pUser'); document.querySelectorAll('.overlay').forEach(p => p.style.display = 'none'); document.getElementById('startMenu').style.display = 'flex'; document.getElementById('hud').style.display = 'none'; const uKey = user.replace(/\W/g,''); if(user === MY_NAME) document.getElementById('adminBtn').style.display = 'block'; onValue(ref(db, `users/${uKey}/coins`), s => { document.getElementById('totalCoinsDisplay').innerText = s.val() || 0; document.getElementById('coinDisplay').innerText = s.val() || 0; }); syncLB(); updateCharUI(); };
 
-// Rain Logic Sync
 onValue(ref(db, 'adminRain'), s => { rainText = s.val(); });
 
 window.startGame = (multi) => { isMultiplayer = multi; document.querySelectorAll('.overlay').forEach(p => p.style.display = 'none'); document.getElementById('hud').style.display = 'flex'; birdImg.src = assets.chars[st.charIndex]; resetGameLogic(); loop(); };
 function resetGameLogic() { st.active = true; st.dead = false; st.score = 0; st.frame = 0; st.pipes = []; st.gameCoins = []; st.bird.y = 300; st.bird.v = 0; st.gameSpeed = 2.5; document.getElementById('scoreDisplay').innerText = "0"; rainParticles = []; }
 
 function loop() { if(!st.active) return; ctx.clearRect(0,0,360,640); st.bX -= st.gameSpeed; ctx.drawImage(bgImg, st.bX, 0, 360, 640); ctx.drawImage(bgImg, st.bX+360, 0, 360, 640); if(st.bX<=-360) st.bX=0; 
-
-    // Rain Effect
     if(rainText) {
         if(st.frame % 5 === 0) rainParticles.push({x: Math.random()*360, y: -20, s: 2+Math.random()*3});
         ctx.fillStyle = "white"; ctx.font = "20px Arial";
         rainParticles.forEach((rp, i) => { rp.y += rp.s; ctx.fillText(rainText, rp.x, rp.y); if(rp.y > 640) rainParticles.splice(i, 1); });
     }
-
     if(!st.dead) { st.gameSpeed = 2.5 + (st.score * 0.02); st.bird.v += st.bird.g; st.bird.y += st.bird.v; if(st.frame % 100 === 0) { let py = Math.random() * 250 + 100; st.pipes.push({ x: 360, y: py, passed: false }); if(Math.random() > 0.6) st.gameCoins.push({ x: 380, y: py + 80, collected: false }); } } 
     st.gameCoins.forEach(c => { if(!st.dead) c.x -= st.gameSpeed; if(!c.collected) { ctx.drawImage(coinImg, c.x, c.y, 30, 30); if(Math.hypot(st.bird.x-c.x, st.bird.y-c.y) < 35) { c.collected=true; addCoin(5); } } }); 
     st.pipes.forEach(p => { if(!st.dead) p.x -= st.gameSpeed; ctx.fillStyle = "#2ecc71"; ctx.fillRect(p.x, 0, 52, p.y); ctx.fillRect(p.x, p.y + 180, 52, 640); if(!st.dead && st.bird.x+15 > p.x && st.bird.x-15 < p.x+52 && (st.bird.y-15 < p.y || st.bird.y+15 > p.y+180)) die(); if(!p.passed && p.x < st.bird.x) { p.passed=true; st.score++; document.getElementById('scoreDisplay').innerText = st.score; } }); 
@@ -172,13 +168,7 @@ window.shareSocial = (type) => {
 
 window.createRoomAction = () => { isHost = true; joinRoom(Math.floor(1000 + Math.random() * 9000)); };
 window.joinRoomAction = () => { const c = document.getElementById('roomIn').value; if(c) joinRoom(c); };
-function joinRoom(code) { 
-    currentRoom = code; 
-    document.querySelectorAll('.overlay').forEach(p => p.style.display = 'none'); 
-    document.getElementById('roomLobby').style.display = 'flex'; 
-    document.getElementById('displayRoomCode').innerText = code; 
-    if(isHost) document.getElementById('startBtn').style.display = "block";
-}
+function joinRoom(code) { currentRoom = code; document.querySelectorAll('.overlay').forEach(p => p.style.display = 'none'); document.getElementById('roomLobby').style.display = 'flex'; document.getElementById('displayRoomCode').innerText = code; if(isHost) document.getElementById('startBtn').style.display = "block"; }
 
 window.hostStartGame = () => { set(ref(db, `rooms/${currentRoom}/start`), true); };
 onValue(ref(db, `rooms/${currentRoom}/start`), s => { if(s.val() === true) startGame(true); });
@@ -193,9 +183,17 @@ window.changeChar = (dir) => { st.charIndex = (st.charIndex + dir + assets.chars
 function updateCharUI() { document.getElementById('charAvatar').src = assets.chars[st.charIndex]; }
 window.toggleMute = () => { isMuted = !isMuted; bgMusic.muted = isMuted; if(isMuted) bgMusic.pause(); else bgMusic.play(); document.getElementById('muteBtn').innerText = isMuted ? '🔇' : '🔊'; };
 
+// IPHONE TOUCH EVENT ADDED (Fixes iPhone responsiveness)
+window.addEventListener('touchstart', (e) => { 
+    if(st.active && !st.dead && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') { 
+        st.bird.v = -5.5; 
+        if(!isMuted) bgMusic.play(); 
+    } 
+}, {passive: false});
+
+// Kept existing mousedown for desktop compatibility
 window.addEventListener('mousedown', (e) => { if(st.active && !st.dead && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') { st.bird.v = -5.5; if(!isMuted) bgMusic.play(); } });
 
-// Admin Features
 window.openAdmin = () => document.getElementById('adminPanel').style.display='block';
 window.closeAdmin = () => document.getElementById('adminPanel').style.display='none';
 window.pushGlobalAlert = () => { set(ref(db, 'adminAlert'), document.getElementById('adminMsgIn').value); };
